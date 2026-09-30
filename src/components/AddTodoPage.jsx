@@ -20,25 +20,8 @@ function AddTodoPage({ onSave, onCancel }) {
         </label>
 
         <label>
-          <span>Category</span>
-          <select defaultValue="">
-            <option value="" disabled>
-              Select category
-            </option>
-            <option value="work">Work</option>
-            <option value="personal">Personal</option>
-            <option value="health">Health</option>
-          </select>
-        </label>
-
-        <label>
           <span>Due Date</span>
           <input type="date" />
-        </label>
-
-        <label>
-          <span>Description</span>
-          <textarea rows="4" placeholder="Add more details..." />
         </label>
 
         <div className="form-actions">

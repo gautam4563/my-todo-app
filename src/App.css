@@ -165,14 +165,65 @@ p {
   display: flex;
   align-items: center;
   gap: 16px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
-.todo-check {
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  border: 2px solid #a5b4fc;
+.todo-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+  order: 2;
+}
+
+.move-date-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.action-btn {
+  width: 36px;
+  height: 36px;
+  border: 1px solid #dbe3f0;
+  border-radius: 10px;
   background: #fff;
+  display: grid;
+  place-items: center;
+  color: #475569;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.action-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
+.action-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.08);
+}
+
+.action-btn.done {
+  background: #ecfdf5;
+  border-color: #86efac;
+  color: #15803d;
+}
+
+.action-btn.delete {
+  background: #fef2f2;
+  border-color: #fca5a5;
+  color: #dc2626;
+}
+
+.action-btn.move {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+  color: #2563eb;
 }
 
 .todo-details {
