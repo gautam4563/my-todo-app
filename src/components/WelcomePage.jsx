@@ -1,6 +1,34 @@
 import { GoogleLogin } from '@react-oauth/google';
 
-function WelcomePage({ onLogin }) {
+function WelcomePage({ isLoggedIn, user, onLogin, onLogout }) {
+  if (isLoggedIn) {
+    return (
+      <section className="page-card welcome-page">
+        <div className="welcome-content">
+          <p className="eyebrow">Welcome back</p>
+
+          {user?.picture && (
+            <img
+              src={user.picture}
+              alt={user.name}
+              style={{ width: 70, height: 70, borderRadius: '50%', marginBottom: 16 }}
+            />
+          )}
+
+          <h1>Hello, {user?.name || 'User'}</h1>
+
+          <p className="subtitle">
+            You are signed in with your Google account.
+          </p>
+
+          <button className="primary-btn" onClick={onLogout}>
+            Logout
+          </button>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section className="page-card welcome-page">
       <div className="welcome-content">
@@ -12,8 +40,7 @@ function WelcomePage({ onLogin }) {
 
         <GoogleLogin
           onSuccess={(credentialResponse) => {
-            console.log('Login success', credentialResponse);
-            onLogin?.();
+            onLogin?.(credentialResponse);
           }}
           onError={() => {
             console.log('Login Failed');
