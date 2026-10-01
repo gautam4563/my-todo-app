@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react'
+import { onAuthStateChanged, GoogleAuthProvider, signInWithPopup, signOut as firebaseSignOut } from 'firebase/auth'
 import { doc, getDoc, setDoc } from 'firebase/firestore'
 import './App.css'
 import WelcomePage from './components/WelcomePage'
 import TodoListPage from './components/TodoListPage'
 import AddTodoPage from './components/AddTodoPage'
-import { db } from './firebase'
+import { auth, db } from './firebase'
 
 const getTodosForEmail = async (email) => {
   if (!email) return []
@@ -37,25 +38,61 @@ function App() {
     }
   }, [isLoggedIn, currentPage])
 
-  const handleGoogleLogin = async (credentialResponse) => {
-    const token = credentialResponse.credential
-    const payload = JSON.parse(atob(token.split('.')[1]))
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      if (!currentUser) {
+        setUser(null)
+        setTodos([])
+        setIsLoggedIn(false)
+        setCurrentPage('welcome')
+        return
+      }
 
-    const userData = {
-      name: payload.name,
-      email: payload.email,
-      picture: payload.picture,
+      const userData = {
+        name: currentUser.displayName || 'User',
+        email: currentUser.email,
+        picture: currentUser.photoURL,
+      }
+
+      const savedTodos = await getTodosForEmail(userData.email)
+
+      setUser(userData)
+      setTodos(savedTodos)
+      setIsLoggedIn(true)
+      setCurrentPage('todoList')
+    })
+
+    return () => unsubscribe()
+  }, [])
+
+  const handleGoogleLogin = async () => {
+    try {
+      const provider = new GoogleAuthProvider()
+      const result = await signInWithPopup(auth, provider)
+      const userData = {
+        name: result.user.displayName || 'User',
+        email: result.user.email,
+        picture: result.user.photoURL,
+      }
+
+      const savedTodos = await getTodosForEmail(userData.email)
+
+      setUser(userData)
+      setTodos(savedTodos)
+      setIsLoggedIn(true)
+      setCurrentPage('todoList')
+    } catch (error) {
+      console.error('Google login error:', error)
     }
-
-    const savedTodos = await getTodosForEmail(userData.email)
-
-    setUser(userData)
-    setTodos(savedTodos)
-    setIsLoggedIn(true)
-    setCurrentPage('todoList')
   }
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      await firebaseSignOut(auth)
+    } catch (error) {
+      console.error('Logout error:', error)
+    }
+
     setIsLoggedIn(false)
     setUser(null)
     setTodos([])

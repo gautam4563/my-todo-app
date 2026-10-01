@@ -1,5 +1,3 @@
-import { GoogleLogin } from '@react-oauth/google';
-
 function WelcomePage({ isLoggedIn, user, onLogin, onLogout }) {
   if (isLoggedIn) {
     return (
@@ -26,7 +24,7 @@ function WelcomePage({ isLoggedIn, user, onLogin, onLogout }) {
           </button>
         </div>
       </section>
-    );
+    )
   }
 
   return (
@@ -38,17 +36,12 @@ function WelcomePage({ isLoggedIn, user, onLogin, onLogout }) {
           Organize your day with a clean and simple todo experience.
         </p>
 
-        <GoogleLogin
-          onSuccess={(credentialResponse) => {
-            onLogin?.(credentialResponse);
-          }}
-          onError={() => {
-            console.log('Login Failed');
-          }}
-        />
+        <button className="primary-btn" onClick={onLogin}>
+          Login with Gmail
+        </button>
       </div>
     </section>
-  );
+  )
 }
 
-export default WelcomePage;
+export default WelcomePage
