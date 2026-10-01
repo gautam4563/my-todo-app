@@ -1,14 +1,26 @@
 import { useState, useEffect } from 'react'
+import { doc, getDoc, setDoc } from 'firebase/firestore'
 import './App.css'
 import WelcomePage from './components/WelcomePage'
 import TodoListPage from './components/TodoListPage'
 import AddTodoPage from './components/AddTodoPage'
+import { db } from './firebase'
 
-const initialTodos = [
-  { id: 1, title: 'Prepare sprint plan', date: '2026-10-02', completed: false, tag: 'Work' },
-  { id: 2, title: 'Buy groceries', date: '2026-10-03', completed: false, tag: 'Personal' },
-  { id: 3, title: 'Workout session', date: '2026-10-04', completed: false, tag: 'Health' },
-]
+const getTodosForEmail = async (email) => {
+  if (!email) return []
+
+  const userDocRef = doc(db, 'users', email)
+  const userDoc = await getDoc(userDocRef)
+
+  return userDoc.exists() ? userDoc.data().todos || [] : []
+}
+
+const saveTodosForEmail = async (email, tasks) => {
+  if (!email) return
+
+  const userDocRef = doc(db, 'users', email)
+  await setDoc(userDocRef, { email, todos: tasks }, { merge: true })
+}
 
 function App() {
   const today = new Date().toISOString().split('T')[0]
@@ -16,7 +28,7 @@ function App() {
   const [currentPage, setCurrentPage] = useState('welcome')
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [user, setUser] = useState(null)
-  const [todos, setTodos] = useState(initialTodos)
+  const [todos, setTodos] = useState([])
   const [selectedDate, setSelectedDate] = useState(today)
 
   useEffect(() => {
@@ -25,7 +37,7 @@ function App() {
     }
   }, [isLoggedIn, currentPage])
 
-  const handleGoogleLogin = (credentialResponse) => {
+  const handleGoogleLogin = async (credentialResponse) => {
     const token = credentialResponse.credential
     const payload = JSON.parse(atob(token.split('.')[1]))
 
@@ -35,7 +47,10 @@ function App() {
       picture: payload.picture,
     }
 
+    const savedTodos = await getTodosForEmail(userData.email)
+
     setUser(userData)
+    setTodos(savedTodos)
     setIsLoggedIn(true)
     setCurrentPage('todoList')
   }
@@ -43,10 +58,11 @@ function App() {
   const handleLogout = () => {
     setIsLoggedIn(false)
     setUser(null)
+    setTodos([])
     setCurrentPage('welcome')
   }
 
-  const handleAddTodo = ({ title, date }) => {
+  const handleAddTodo = async ({ title, date }) => {
     const newTodo = {
       id: Date.now(),
       title: title.trim(),
@@ -55,28 +71,47 @@ function App() {
       tag: 'Task',
     }
 
-    setTodos((previousTodos) => [newTodo, ...previousTodos])
+    const updatedTodos = [newTodo, ...todos]
+    setTodos(updatedTodos)
+
+    if (user?.email) {
+      await saveTodosForEmail(user.email, updatedTodos)
+    }
+
     setCurrentPage('todoList')
   }
 
-  const handleToggleTodo = (todoId) => {
-    setTodos((previousTodos) =>
-      previousTodos.map((todo) =>
-        todo.id === todoId ? { ...todo, completed: !todo.completed } : todo,
-      ),
+  const handleToggleTodo = async (todoId) => {
+    const updatedTodos = todos.map((todo) =>
+      todo.id === todoId ? { ...todo, completed: !todo.completed } : todo,
     )
+
+    setTodos(updatedTodos)
+
+    if (user?.email) {
+      await saveTodosForEmail(user.email, updatedTodos)
+    }
   }
 
-  const handleDeleteTodo = (todoId) => {
-    setTodos((previousTodos) => previousTodos.filter((todo) => todo.id !== todoId))
+  const handleDeleteTodo = async (todoId) => {
+    const updatedTodos = todos.filter((todo) => todo.id !== todoId)
+    setTodos(updatedTodos)
+
+    if (user?.email) {
+      await saveTodosForEmail(user.email, updatedTodos)
+    }
   }
 
-  const handleMoveTodo = (todoId, newDate) => {
-    setTodos((previousTodos) =>
-      previousTodos.map((todo) =>
-        todo.id === todoId ? { ...todo, date: newDate || todo.date } : todo,
-      ),
+  const handleMoveTodo = async (todoId, newDate) => {
+    const updatedTodos = todos.map((todo) =>
+      todo.id === todoId ? { ...todo, date: newDate || todo.date } : todo,
     )
+
+    setTodos(updatedTodos)
+
+    if (user?.email) {
+      await saveTodosForEmail(user.email, updatedTodos)
+    }
   }
 
   return (
