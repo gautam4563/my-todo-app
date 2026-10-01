@@ -1,7 +1,25 @@
-function AddTodoPage({ onSave, onCancel }) {
+import { useState, useEffect } from 'react'
+
+function AddTodoPage({ defaultDate, onSave, onCancel }) {
+  const [title, setTitle] = useState('')
+  const [date, setDate] = useState(defaultDate || '')
+
+  useEffect(() => {
+    if (defaultDate) {
+      setDate(defaultDate)
+    }
+  }, [defaultDate])
+
   const handleSubmit = (event) => {
     event.preventDefault()
-    onSave()
+
+    if (!title.trim()) {
+      return
+    }
+
+    onSave({ title, date })
+    setTitle('')
+    setDate('')
   }
 
   return (
@@ -16,12 +34,18 @@ function AddTodoPage({ onSave, onCancel }) {
       <form className="todo-form" onSubmit={handleSubmit}>
         <label>
           <span>Title</span>
-          <input type="text" placeholder="Enter task title" />
+          <input
+            type="text"
+            placeholder="Enter task title"
+            value={title}
+            onChange={(event) => setTitle(event.target.value)}
+            required
+          />
         </label>
 
         <label>
           <span>Due Date</span>
-          <input type="date" />
+          <input type="date" value={date} onChange={(event) => setDate(event.target.value)} required />
         </label>
 
         <div className="form-actions">

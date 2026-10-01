@@ -1,9 +1,3 @@
-const sampleTodos = [
-  { id: 1, title: 'Prepare sprint plan', tag: 'Work', time: '9:00 AM' },
-  { id: 2, title: 'Buy groceries', tag: 'Personal', time: '11:30 AM' },
-  { id: 3, title: 'Workout session', tag: 'Health', time: '6:00 PM' },
-]
-
 function CheckIcon() {
   return (
     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -36,7 +30,15 @@ function ActionButton({ label, variant, children, onClick }) {
   )
 }
 
-function TodoListPage({ onAddTodo }) {
+function TodoListPage({
+  todos,
+  selectedDate,
+  onSelectedDateChange,
+  onAddTodo,
+  onToggleTodo,
+  onDeleteTodo,
+  onMoveTodo,
+}) {
   const handleMoveClick = (event) => {
     const input = event.currentTarget.parentElement?.querySelector('input[type="date"]')
     if (input) {
@@ -44,6 +46,10 @@ function TodoListPage({ onAddTodo }) {
       input.click()
     }
   }
+
+  const filteredTodos = (selectedDate ? todos.filter((todo) => todo.date === selectedDate) : todos)
+    .slice()
+    .sort((a, b) => Number(a.completed) - Number(b.completed))
 
   return (
     <section className="page-card list-page">
@@ -57,30 +63,58 @@ function TodoListPage({ onAddTodo }) {
         </button>
       </div>
 
-      <ul className="todo-list">
-        {sampleTodos.map((todo) => (
-          <li key={todo.id} className="todo-item">
-            <div className="todo-actions" aria-label="Todo actions">
-              <ActionButton label="Mark as done" variant="done">
-                <CheckIcon />
-              </ActionButton>
-              <ActionButton label="Delete task" variant="delete">
-                <DeleteIcon />
-              </ActionButton>
-              <ActionButton label="Move task" variant="move" onClick={handleMoveClick}>
-                <MoveIcon />
-              </ActionButton>
-              <input type="date" className="move-date-input" aria-label={`Move task ${todo.id}`} />
-            </div>
+      <div className="filter-row">
+        <label className="filter-control">
+          <span>Filter by date</span>
+          <input
+            type="date"
+            value={selectedDate}
+            onChange={(event) => onSelectedDateChange(event.target.value)}
+          />
+        </label>
 
-            <div className="todo-details">
-              <div className="todo-meta">
-                <span className="todo-tag">{todo.tag}</span>
+        <button type="button" className="ghost-btn" onClick={() => onSelectedDateChange('')}>
+          Show all
+        </button>
+      </div>
+
+      {filteredTodos.length === 0 ? (
+        <p className="empty-state">
+          {selectedDate ? `No tasks for ${selectedDate}.` : 'No tasks yet. Add a new todo.'}
+        </p>
+      ) : (
+        <ul className="todo-list">
+          {filteredTodos.map((todo) => (
+            <li key={todo.id} className={`todo-item ${todo.completed ? 'completed' : ''}`}>
+              <div className="todo-actions" aria-label="Todo actions">
+                <ActionButton label="Mark as done" variant="done" onClick={() => onToggleTodo(todo.id)}>
+                  <CheckIcon />
+                </ActionButton>
+                <ActionButton label="Delete task" variant="delete" onClick={() => onDeleteTodo(todo.id)}>
+                  <DeleteIcon />
+                </ActionButton>
+                <ActionButton label="Move task" variant="move" onClick={handleMoveClick}>
+                  <MoveIcon />
+                </ActionButton>
+                <input
+                  type="date"
+                  className="move-date-input"
+                  aria-label={`Move task ${todo.id}`}
+                  value={todo.date}
+                  onChange={(event) => onMoveTodo(todo.id, event.target.value)}
+                />
               </div>
-            </div>
-          </li>
-        ))}
-      </ul>
+
+              <div className="todo-details">
+                <h3>{todo.title}</h3>
+                <div className="todo-meta">
+                  {todo.date && <span>{new Date(`${todo.date}T00:00:00`).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</span>}
+                </div>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
     </section>
   )
 }
